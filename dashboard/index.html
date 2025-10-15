@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Afro-Asian NGO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #34a853;
+            --accent: #ea4335;
+            --warning: #fbbc04;
+            --dark: #1f1f1f;
+            --light: #f8f9fa;
+            --card-bg: white;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        body.rtl {
+            direction: rtl;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .top-bar-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .lang-toggle {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s;
+        }
+
+        .lang-toggle:hover {
+            transform: translateY(-2px);
+        }
+
+        .refresh-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.purple { background: rgba(102, 126, 234, 0.1); color: var(--primary); }
+        .stat-icon.green { background: rgba(52, 168, 83, 0.1); color: var(--secondary); }
+        .stat-icon.red { background: rgba(234, 67, 53, 0.1); color: var(--accent); }
+        .stat-icon.yellow { background: rgba(251, 188, 4, 0.1); color: var(--warning); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Charts */
+        .charts-container {
+            padding: 0 2rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        /* Submissions Table */
+        .table-container {
+            padding: 0 2rem 2rem;
+        }
+
+        .table-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 0.7rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            width: 300px;
+            font-size: 0.9rem;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: var(--light);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        body.rtl th {
+            text-align: right;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.financial {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        .badge.networking {
+            background: rgba(52, 168, 83, 0.1);
+            color: var(--secondary);
+        }
+
+        .badge.technical {
+            background: rgba(234, 67, 53, 0.1);
+            color: var(--accent);
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .view-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: #5568d3;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box {
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .top-bar {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.3rem;
+            }
+
+            .top-bar-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <h1 class="page-title" data-en="Submissions Dashboard" data-ar="لوحة الطلبات">Submissions Dashboard</h1>
+        <div class="top-bar-actions">
+            <button class="refresh-btn" onclick="loadData()">
+                <span>🔄</span>
+                <span data-en="Refresh Data" data-ar="تحديث البيانات">Refresh Data</span>
+            </button>
+            <button class="lang-toggle" onclick="toggleLanguage()">العربية</button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="totalSubmissions">0</div>
+                    <div class="stat-label" data-en="Total Submissions" data-ar="إجمالي الطلبات">Total Submissions</div>
+                </div>
+                <div class="stat-icon purple">📋</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="financialSupport">0</div>
+                    <div class="stat-label" data-en="Financial Support" data-ar="الدعم المالي">Financial Support</div>
+                </div>
+                <div class="stat-icon green">💰</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="networkingSupport">0</div>
+                    <div class="stat-label" data-en="Networking" data-ar="التواصل">Networking</div>
+                </div>
+                <div class="stat-icon red">🤝</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="technicalSupport">0</div>
+                    <div class="stat-label" data-en="Technical Support" data-ar="الدعم التقني">Technical Support</div>
+                </div>
+                <div class="stat-icon yellow">🔧</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-container">
+        <div class="chart-card">
+            <h3 class="chart-title" data-en="Submissions by Support Type" data-ar="الطلبات حسب نوع الدعم">Submissions by Support Type</h3>
+            <canvas id="supportTypeChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title" data-en="Submissions Over Time" data-ar="الطلبات عبر الوقت">Submissions Over Time</h3>
+            <canvas id="timelineChart"></canvas>
+        </div>
+
+        <div class="chart-card">
+            <h3 class="chart-title" data-en="Top Countries" data-ar="أكثر الدول">Top Countries</h3>
+            <canvas id="countriesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="table-container">
+        <div class="table-card">
+            <div class="table-header">
+                <h3 class="chart-title" data-en="Recent Submissions" data-ar="الطلبات الأخيرة">Recent Submissions</h3>
+                <input type="text" class="search-box" id="searchBox" placeholder="Search by name, country, or idea..." data-en-placeholder="Search by name, country, or idea..." data-ar-placeholder="ابحث بالاسم أو الدولة أو الفكرة...">
+            </div>
+            <div class="table-wrapper">
+                <table id="submissionsTable">
+                    <thead>
+                        <tr>
+                            <th data-en="Date" data-ar="التاريخ">Date</th>
+                            <th data-en="Name" data-ar="الاسم">Name</th>
+                            <th data-en="Country" data-ar="الدولة">Country</th>
+                            <th data-en="Support Type" data-ar="نوع الدعم">Support Type</th>
+                            <th data-en="WhatsApp" data-ar="واتساب">WhatsApp</th>
+                            <th data-en="Action" data-ar="الإجراء">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="6">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <p data-en="Loading data..." data-ar="جاري تحميل البيانات...">Loading data...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'en';
+        let allSubmissions = [];
+        let charts = {};
+
+        // Toggle Language
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'ar' : 'en';
+            document.body.classList.toggle('rtl', currentLang === 'ar');
+            
+            document.querySelectorAll('[data-en]').forEach(el => {
+                if (el.tagName === 'INPUT') {
+                    el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+                } else {
+                    el.textContent = el.getAttribute(`data-${currentLang}`);
+                }
+            });
+
+            document.querySelector('.lang-toggle').textContent = currentLang === 'en' ? 'العربية' : 'English';
+            
+            // Update chart labels
+            updateChartLanguages();
+        }
+
+        // Load Data from Google Sheets
+        async function loadData() {
+            try {
+                // Replace with your Google Apps Script Web App URL
+                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPFuTzH1ubUER8rBGnJgOVBn0zMCap5TLl20Up747Y7U2gukDINGotNGEdHayCKyDrQA/exec';
+                
+                const response = await fetch(SCRIPT_URL + '?action=getData');
+                const data = await response.json();
+                
+                allSubmissions = data.submissions || generateSampleData();
+                
+                updateStats();
+                updateCharts();
+                updateTable(allSubmissions);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Use sample data for demonstration
+                allSubmissions = generateSampleData();
+                updateStats();
+                updateCharts();
+                updateTable(allSubmissions);
+            }
+        }
+
+
+        // Update Statistics
+        function updateStats() {
+            document.getElementById('totalSubmissions').textContent = allSubmissions.length;
+            
+            const financial = allSubmissions.filter(s => s.supportType === 'Financial Support').length;
+            const networking = allSubmissions.filter(s => s.supportType === 'Networking').length;
+            const technical = allSubmissions.filter(s => s.supportType === 'Technical Support').length;
+            
+            document.getElementById('financialSupport').textContent = financial;
+            document.getElementById('networkingSupport').textContent = networking;
+            document.getElementById('technicalSupport').textContent = technical;
+        }
+
+        // Update Charts
+        function updateCharts() {
+            createSupportTypeChart();
+            createTimelineChart();
+            createCountriesChart();
+        }
+
+        // Support Type Chart
+        function createSupportTypeChart() {
+            const ctx = document.getElementById('supportTypeChart').getContext('2d');
+            
+            if (charts.supportType) {
+                charts.supportType.destroy();
+            }
+
+            const financial = allSubmissions.filter(s => s.supportType === 'Financial Support').length;
+            const networking = allSubmissions.filter(s => s.supportType === 'Networking').length;
+            const technical = allSubmissions.filter(s => s.supportType === 'Technical Support').length;
+
+            charts.supportType = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: currentLang === 'en' ? 
+                        ['Financial Support', 'Networking', 'Technical Support'] :
+                        ['الدعم المالي', 'التواصل', 'الدعم التقني'],
+                    datasets: [{
+                        data: [financial, networking, technical],
+                        backgroundColor: ['#667eea', '#34a853', '#ea4335'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Timeline Chart
+        function createTimelineChart() {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            
+            if (charts.timeline) {
+                charts.timeline.destroy();
+            }
+
+            // Group by month
+            const monthlyData = {};
+            allSubmissions.forEach(sub => {
+                const date = new Date(sub.timestamp);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const labels = sortedMonths.map(m => {
+                const [year, month] = m.split('-');
+                const date = new Date(year, month - 1);
+                return currentLang === 'en' ? 
+                    date.toLocaleDateString('en', { month: 'short', year: 'numeric' }) :
+                    date.toLocaleDateString('ar', { month: 'short', year: 'numeric' });
+            });
+            const data = sortedMonths.map(m => monthlyData[m]);
+
+            charts.timeline = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: currentLang === 'en' ? 'Submissions' : 'الطلبات',
+                        data: data,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Countries Chart
+        function createCountriesChart() {
+            const ctx = document.getElementById('countriesChart').getContext('2d');
+            
+            if (charts.countries) {
+                charts.countries.destroy();
+            }
+
+            // Count by country
+            const countryData = {};
+            allSubmissions.forEach(sub => {
+                countryData[sub.country] = (countryData[sub.country] || 0) + 1;
+            });
+
+            // Get top 5 countries
+            const sortedCountries = Object.entries(countryData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            charts.countries = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCountries.map(c => c[0]),
+                    datasets: [{
+                        label: currentLang === 'en' ? 'Submissions' : 'الطلبات',
+                        data: sortedCountries.map(c => c[1]),
+                        backgroundColor: ['#667eea', '#34a853', '#ea4335', '#fbbc04', '#764ba2'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Chart Languages
+        function updateChartLanguages() {
+            updateCharts();
+        }
+
+        // Update Table
+        function updateTable(data) {
+            const tbody = document.getElementById('tableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem;">
+                            <p data-en="No submissions found" data-ar="لا توجد طلبات">${currentLang === 'en' ? 'No submissions found' : 'لا توجد طلبات'}</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = data.slice(0, 20).map(sub => {
+                const date = new Date(sub.timestamp);
+                const formattedDate = currentLang === 'en' ? 
+                    date.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' }) :
+                    date.toLocaleDateString('ar', { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                let badgeClass = 'financial';
+                if (sub.supportType === 'Networking') badgeClass = 'networking';
+                if (sub.supportType === 'Technical Support') badgeClass = 'technical';
+
+                const supportTypeText = currentLang === 'en' ? sub.supportType : 
+                    (sub.supportType === 'Financial Support' ? 'الدعم المالي' :
+                     sub.supportType === 'Networking' ? 'التواصل' : 'الدعم التقني');
+
+                return `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td><strong>${sub.name}</strong></td>
+                        <td>${sub.country}</td>
+                        <td><span class="badge ${badgeClass}">${supportTypeText}</span></td>
+                        <td>${sub.whatsapp}</td>
+                        <td>
+                            <button class="action-btn view-btn" onclick="viewSubmission(${data.indexOf(sub)})">
+                                ${currentLang === 'en' ? 'View' : 'عرض'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Search Functionality
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allSubmissions.filter(sub => 
+                sub.name.toLowerCase().includes(searchTerm) ||
+                sub.country.toLowerCase().includes(searchTerm) ||
+                sub.ideaSummary.toLowerCase().includes(searchTerm)
+            );
+            updateTable(filtered);
+        });
+
+        // View Submission Details
+        function viewSubmission(index) {
+            const sub = allSubmissions[index];
+            const message = currentLang === 'en' ? 
+                `Name: ${sub.name}\nCountry: ${sub.country}\nWhatsApp: ${sub.whatsapp}\nSupport Type: ${sub.supportType}\n\nIdea Summary:\n${sub.ideaSummary}` :
+                `الاسم: ${sub.name}\nالدولة: ${sub.country}\nواتساب: ${sub.whatsapp}\nنوع الدعم: ${sub.supportType === 'Financial Support' ? 'الدعم المالي' : sub.supportType === 'Networking' ? 'التواصل' : 'الدعم التقني'}\n\nملخص الفكرة:\n${sub.ideaSummary}`;
+            
+            alert(message);
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            loadData();
+        });
+    </script>
+
+</body>
+</html>
